@@ -1,81 +1,32 @@
 import { faker } from "@faker-js/faker";
 
 type GamerData = {
-  realname: string;
+  firstname: string;
+  lastname: string;
   address: string;
+  PLZ: string;
+  city: string;
   birthdate: string;
   email: string;
   gamertag: string;
   join_date: string;
-  last_login: string;
-  hardware: string[];
-  game_stats: GameStats[];
-};
-
-type GameStats = {
+  hardware: string;
   game: string;
-  consumption: Consumption;
-  in_game_level: number;
-  playtime: number;
-  wins: number;
-  losses: number;
+  playtime: string;
+  wins: string;
+  losses: string;
+  ingamelevel: string;
 };
-
-type Consumption = "Low" | "Medium" | "High";
 
 const possibleHardware = [
-  [
-    "Asus Rock Strix 1080ti",
-    "Intel i7 8700k",
-    "16GB DDR4 3200mhz",
-    "1TB SSD",
-    "2TB HDD",
-  ],
-  [
-    "Asus Rock Strix 2080ti",
-    "Intel i9 9900k",
-    "32GB DDR4 3200mhz",
-    "1TB SSD",
-    "2TB HDD",
-  ],
-  [
-    "Asus Rock Strix 3080ti",
-    "Intel i9 10900k",
-    "64GB DDR4 3200mhz",
-    "1TB SSD",
-    "2TB HDD",
-  ],
-  [
-    "Nvidia 1080ti",
-    "Intel i7 8700k",
-    "16GB DDR4 3200mhz",
-    "1TB SSD",
-    "2TB HDD",
-  ],
-  [
-    "Nvidia 2080ti",
-    "Intel i9 9900k",
-    "32GB DDR4 3200mhz",
-    "1TB SSD",
-    "2TB HDD",
-  ],
-  [
-    "Nvidia 3080ti",
-    "Intel i9 10900k",
-    "64GB DDR4 3200mhz",
-    "1TB SSD",
-    "2TB HDD",
-  ],
-  [
-    "AMD 5700XT",
-    "AMD Ryzen 7 3700x",
-    "16GB DDR4 3200mhz",
-    "1TB SSD",
-    "2TB HDD",
-  ],
+  "PC",
+  "Playstation 4",
+  "Playstation 5",
+  "Xbox One",
+  "Xbox Series X",
+  "Nintendo Switch",
 ];
 
-const consumption = ["Low", "Medium", "High"] as Consumption[];
 const possibleGames = [
   "Call of Duty: Warzone",
   "League of Legends",
@@ -107,53 +58,41 @@ const possibleGames = [
 ];
 
 export const generateGamerData = (): GamerData => {
-  const realname = faker.person.fullName();
-  const address = faker.location.streetAddress();
-  const birthdate = faker.date.past({ years: 50 });
-  const email = faker.internet.email();
-  const gamertag = faker.internet.userName();
-  const join_date = faker.date.past({ years: 7 });
-  const last_login = faker.date.past();
-  const hardware = faker.helpers.arrayElement(possibleHardware);
-  const game_stats = generateGameStats(faker.number.int({ min: 1, max: 10 }));
-
-  return {
-    realname,
-    address,
-    birthdate: birthdate.toISOString(),
-    email,
-    gamertag,
-    join_date: join_date.toISOString(),
-    last_login: last_login.toISOString(),
-    hardware,
-    game_stats,
+  const gamerData: GamerData = {
+    firstname: faker.person.firstName(),
+    lastname: faker.person.lastName(),
+    address:
+      faker.location.street() +
+      " " +
+      faker.number.int({ min: 1, max: 100 }).toString(),
+    PLZ: faker.number.int({ min: 1000, max: 9999 }).toString(),
+    city: faker.location.city(),
+    // birthdate as yyyy-mm-dd
+    birthdate: faker.date
+      .past({ years: 60, refDate: "2008-01-01T00:00:00.000Z" })
+      .toISOString()
+      .substring(0, 10),
+    email: faker.internet.email().toLocaleLowerCase("de-DE"),
+    gamertag: faker.internet.userName(),
+    // join_date as yyyy-mm-dd
+    join_date: faker.date.past({ years: 10 }).toISOString().substring(0, 10),
+    hardware: faker.helpers.arrayElement(possibleHardware),
+    game: faker.helpers.arrayElement(possibleGames),
+    playtime: faker.number.int({ min: 100, max: 1000 }).toString(),
+    wins: faker.number.int({ min: 0, max: 1000 }).toString(),
+    losses: faker.number.int({ min: 0, max: 1000 }).toString(),
+    ingamelevel: faker.number.int({ min: 1, max: 100 }).toString(),
   };
+
+  return gamerData;
 };
 
-function generateGameStats(amountOfGames: number) {
-  const gameStats: GameStats[] = [];
-  for (let i = 0; i < amountOfGames; i++) {
-    const game = faker.helpers.arrayElement(possibleGames);
-    const gameConsumption = faker.helpers.arrayElement(consumption);
-    const in_game_level = faker.number.int({ min: 1, max: 100 });
-    // playtime is in hours
-    const playtime = faker.number.int({ min: 0, max: 1000 });
-    const wins = faker.number.int({ min: 0, max: 1000 });
-    const losses = faker.number.int({ min: 0, max: 1000 });
-    gameStats.push({
-      game,
-      consumption: gameConsumption,
-      in_game_level,
-      playtime,
-      wins,
-      losses,
-    });
-  }
+export const gamerDataToCSV = (gamerData: GamerData[]): string => {
+  const header = Object.keys(gamerData[0]).join(";");
 
-  // filter out duplicates
-  const uniqueGames = gameStats.filter(
-    (game, index, self) => index === self.findIndex((t) => t.game === game.game)
-  );
+  const rows = gamerData.map((data) => {
+    return Object.values(data).join(";");
+  });
 
-  return uniqueGames;
-}
+  return `${header}\n${rows.join("\n")}`;
+};
